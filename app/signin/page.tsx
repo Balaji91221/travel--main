@@ -16,10 +16,16 @@ export default function Component() {
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+
+  const clearError = () => setError("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    clearError();
+    
     if (isSignUp && !showOTP) {
       try {
         // Trigger sign-up API to send OTP
@@ -47,12 +53,14 @@ export default function Component() {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({name, email,password, otp }),
+          body: JSON.stringify({ name, email, password, otp }),
         });
         const data = await response.json();
         if (response.ok) {
           console.log("OTP verified, User signed up successfully!");
-          setIsSignUp(false)
+          setIsSignUp(false);
+          // Redirect to home page after successful sign-up
+          router.replace("/");
         } else {
           setError(data.message || 'OTP verification failed');
         }
@@ -60,32 +68,41 @@ export default function Component() {
         setError('Server error. Please try again later.');
       }
     }
+    setIsLoading(false);
   };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // try {
-    //   // Send login credentials to backend
-    //   const response = await fetch('http://localhost:5000/api/auth/login', {
-    //     method: 'POST',
-    //     headers: {
-    //       'Content-Type': 'application/json',
-    //     },
-    //     body: JSON.stringify({ email, password }),
-    //   });
-    //   const data = await response.json();
-    //   if (response.ok) {
-    //     console.log('Login successful', data);
-    //     // Handle successful login (e.g., store JWT, redirect)
-    //   } else {
-    //     setError(data.message || 'Login failed');
-    //   }
-    // } catch (err) {
-    //   setError('Server error. Please try again later.');
-    // }
-    router.replace("/");
+    setIsLoading(true);
+    clearError();
+  
+    console.log("Attempting login with:", email, password); // Debug log
+  
+    try {
+      const response = await fetch('https://backend-travel-6gdg.onrender.com/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await response.json();
+      console.log("Login Response:", data); // Debug log
+  
+      if (response.ok) {
+        console.log('Login successful', data);
+        router.replace("/"); // Redirect after successful login
+      } else {
+        setError(data.message || 'Login failed');
+      }
+    } catch (error) {
+      console.error('Error during login:', error); // Debug log for errors
+      setError('Server error. Please try again later.');
+    }
+  
+    setIsLoading(false);
   };
-
+  
   return (
     <main>
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-100 flex items-center justify-center p-4">
@@ -99,8 +116,8 @@ export default function Component() {
           </CardHeader>
           <Tabs defaultValue="signup" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signup" onClick={() => setIsSignUp(true)}>Sign Up</TabsTrigger>
-              <TabsTrigger value="login" onClick={() => setIsSignUp(false)}>Login</TabsTrigger>
+              <TabsTrigger value="signup" onClick={() => { setIsSignUp(true); clearError(); }}>Sign Up</TabsTrigger>
+              <TabsTrigger value="login" onClick={() => { setIsSignUp(false); clearError(); }}>Login</TabsTrigger>
             </TabsList>
             <TabsContent value="signup">
               <form onSubmit={handleSubmit}>
@@ -128,8 +145,8 @@ export default function Component() {
                   )}
                 </CardContent>
                 <CardFooter>
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700" type="submit">
-                    {showOTP ? "Verify OTP" : "Sign Up"}
+                  <Button className="w-full bg-blue-600 hover:bg-blue-700" type="submit" disabled={isLoading}>
+                    {isLoading ? "Loading..." : showOTP ? "Verify OTP" : "Sign Up"}
                   </Button>
                 </CardFooter>
               </form>
@@ -147,8 +164,8 @@ export default function Component() {
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700" type="submit">
-                    Login
+                  <Button className="w-full bg-blue-600 hover:bg-blue-700" type="submit" disabled={isLoading}>
+                    {isLoading ? "Loading..." : "Login"}
                   </Button>
                 </CardFooter>
               </form>

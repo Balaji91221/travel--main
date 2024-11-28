@@ -106,6 +106,7 @@ export default function Planning() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-100 via-pink-100 to-yellow-100 p-8">
+      
       <div className="container mx-auto">
         <section className="mb-12 text-center">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Plan Your Perfect Indian Adventure</h1>
