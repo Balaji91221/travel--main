@@ -73,35 +73,28 @@ export default function Component() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    clearError();
-  
-    console.log("Attempting login with:", email, password); // Debug log
-  
-    try {
-      const response = await fetch('https://backend-travel-6gdg.onrender.com/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await response.json();
-      console.log("Login Response:", data); // Debug log
-  
-      if (response.ok) {
-        console.log('Login successful', data);
-        router.replace("/"); // Redirect after successful login
-      } else {
-        setError(data.message || 'Login failed');
-      }
-    } catch (error) {
-      console.error('Error during login:', error); // Debug log for errors
-      setError('Server error. Please try again later.');
-    }
-  
-    setIsLoading(false);
+    // try {
+    //   // Send login credentials to backend
+    //   const response = await fetch('http://localhost:5000/api/auth/login', {
+    //     method: 'POST',
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //     },
+    //     body: JSON.stringify({ email, password }),
+    //   });
+    //   const data = await response.json();
+    //   if (response.ok) {
+    //     console.log('Login successful', data);
+    //     // Handle successful login (e.g., store JWT, redirect)
+    //   } else {
+    //     setError(data.message || 'Login failed');
+    //   }
+    // } catch (err) {
+    //   setError('Server error. Please try again later.');
+    // }
+    router.replace("/");
   };
+
   
   return (
     <main>

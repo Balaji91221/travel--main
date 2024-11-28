@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, MapPin, Calendar, DollarSign, Home, Plane, Bus } from 'lucide-react';
+import { Loader2, MapPin, DollarSign, Home, Plane, Bus, Calendar } from 'lucide-react';
+import video from './main.mp4';
 
 interface Recommendation {
   recommended_destinations: {
@@ -103,11 +104,14 @@ export default function Planning() {
       setLoading(false);
     }
   };
-
   return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-100 via-pink-100 to-yellow-100 p-8">
-      
-      <div className="container mx-auto">
+    <main className="min-h-screen relative bg-gradient-to-br from-blue-100 via-pink-100 to-yellow-100 p-8">
+      <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover z-0">
+        <source src={video} type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+
+      <div className="relative z-10 container mx-auto">
         <section className="mb-12 text-center">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Plan Your Perfect Indian Adventure</h1>
           <p className="text-xl text-gray-700">Discover a destination tailored to your preferences and budget</p>
