@@ -2,6 +2,9 @@
 
 ExploreEase is a travel planning app designed to help you discover the magic of India with personalized itineraries, flexible planning, and AI-powered recommendations. Whether you're looking to explore hidden gems or visit iconic landmarks, ExploreEase has you covered!
 
+
+## Demo 👍
+## API  
 ## Features
 
 - **Personalized Itineraries**: Tailored travel plans based on your preferences and budget.

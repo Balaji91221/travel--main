@@ -13,15 +13,8 @@ export default function Planning() {
   const [startingLocation, setStartingLocation] = useState("");
   const [groupSize, setGroupSize] = useState("");
   const [preference, setPreference] = useState("");
-  const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
+  
   interface Recommendation {
-    destinations: Destination[];
-  }
-
-  interface Destination {
     recommended_destinations: {
       name: string;
       description: string;
@@ -34,19 +27,41 @@ export default function Planning() {
       total_cost: number;
       currency: string;
     };
-    accommodation: Accommodation[];
+    accommodation: {
+      type: string;
+      price_range: string;
+      suggested_options: string[];
+    }[];
+    travel_logistics: {
+      transportation: string;
+      duration: string;
+    };
+    best_time_to_visit: {
+      season: string;
+      months: string;
+    };
   }
 
-  interface Accommodation {
-    type: string;
-    price_range: string;
-    suggested_options: string[];
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  interface RecommendationResponse {
+    recommendation: string;
   }
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  interface FetchBody {
+    budget: string;
+    starting_location: string;
+    group_size: number;
+    preference_type: string;
+  }
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setRecommendations([]);
     try {
       const response = await fetch("https://ml-9sr3.onrender.com/recommend_travel", {
         method: "POST",
@@ -56,24 +71,27 @@ export default function Planning() {
           starting_location: startingLocation,
           group_size: parseInt(groupSize, 10),
           preference_type: preference,
-        }),
+        } as FetchBody),
       });
       if (!response.ok) throw new Error("Failed to fetch recommendations");
 
-      const data = await response.json();
-      console.log(data);
-      // Clean up the `recommendation` string
-      const cleanedRecommendation = data.recommendation
-        .replace(/```/g, "") // Remove backticks
-        .trim(); // Trim any extra whitespace
+      const data: RecommendationResponse = await response.json();
+      console.log("Raw API response:", data);
 
-      // Parse the cleaned string as JSON
-      const parsedRecommendation: Recommendation = JSON.parse(cleanedRecommendation);
+      // Remove backticks and newlines from the recommendation string
+      const cleanedRecommendation = data.recommendation.replace(/```\n|\n```/g, '').trim();
+      
+      // Parse the cleaned JSON string
+      const parsedRecommendation: Recommendation | Recommendation[] = JSON.parse(cleanedRecommendation);
+      
+      // Handle both single recommendation and array of recommendations
+      const recommendationsArray = Array.isArray(parsedRecommendation) ? parsedRecommendation : [parsedRecommendation];
 
-      // Set the cleaned recommendation
-      setRecommendation(parsedRecommendation);
-      console.log("Parsed Recommendation:", parsedRecommendation);
+      // Set the parsed recommendations
+      setRecommendations(recommendationsArray);
+      console.log("Parsed Recommendations:", recommendationsArray);
     } catch (err: unknown) {
+      console.error("Error in handleSubmit:", err);
       if (err instanceof Error) {
         setError(err.message);
       } else {
@@ -178,60 +196,75 @@ export default function Planning() {
         </Card>
 
         {error && <div className="text-red-500 mt-4">{error}</div>}
-        {recommendation && recommendation.destinations && (
-  <div className="mt-12 space-y-12">
-    <section>
-      <h2 className="text-3xl font-bold text-white mb-6">Recommended Destinations</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {recommendation.destinations.map((dest, index) => (
-          <Card key={index} className="bg-white shadow-lg rounded-lg p-4">
-            <CardHeader>
-              <CardTitle className="text-xl font-bold text-teal-600">
-                {dest.recommended_destinations.name}
-              </CardTitle>
-              <CardDescription className="text-gray-600 mt-2">
-                {dest.recommended_destinations.description}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {/* Highlights */}
-              <h3 className="text-lg font-semibold text-gray-800 mt-4">Highlights</h3>
-              <ul className="list-disc list-inside text-gray-600 mt-2">
-                {dest.recommended_destinations.highlights.map((highlight, idx) => (
-                  <li key={idx}>{highlight}</li>
+        {recommendations.length > 0 && (
+          <div className="mt-12 space-y-12">
+            <section>
+              <h2 className="text-3xl font-bold text-white mb-6">Recommended Destinations</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {recommendations.map((recommendation, index) => (
+                  <Card key={index} className="bg-white shadow-lg rounded-lg p-4">
+                    <CardHeader>
+                      <CardTitle className="text-xl font-bold text-teal-600">
+                        {recommendation.recommended_destinations.name}
+                      </CardTitle>
+                      <CardDescription className="text-gray-600 mt-2">
+                        {recommendation.recommended_destinations.description}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {/* Highlights */}
+                      <h3 className="text-lg font-semibold text-gray-800 mt-4">Highlights</h3>
+                      <ul className="list-disc list-inside text-gray-600 mt-2">
+                        {recommendation.recommended_destinations.highlights.map((highlight, idx) => (
+                          <li key={idx}>{highlight}</li>
+                        ))}
+                      </ul>
+
+                      {/* Estimated Costs */}
+                      <h3 className="text-lg font-semibold text-gray-800 mt-6">Estimated Costs</h3>
+                      <p className="text-gray-600 mt-2">
+                        <strong>Flights:</strong> ₹{recommendation.estimated_costs.flights}<br />
+                        <strong>Accommodation:</strong> ₹{recommendation.estimated_costs.accommodation}<br />
+                        <strong>Daily Expenses:</strong> ₹{recommendation.estimated_costs.daily_expenses}<br />
+                        <strong>Total:</strong> ₹{recommendation.estimated_costs.total_cost} {recommendation.estimated_costs.currency}
+                      </p>
+
+                      {/* Accommodation Options */}
+                      <h3 className="text-lg font-semibold text-gray-800 mt-6">Accommodation Options</h3>
+                      {recommendation.accommodation.map((acc, accIdx) => (
+                        <div key={accIdx} className="mt-4">
+                          <h4 className="text-md font-semibold text-teal-600">{acc.type}</h4>
+                          <p className="text-gray-600 mt-2">Price Range: {acc.price_range}</p>
+                          <ul className="list-disc list-inside text-gray-600 mt-2">
+                            {acc.suggested_options.map((option, optIdx) => (
+                              <li key={optIdx}>{option}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+
+                      {/* Travel Logistics */}
+                      <h3 className="text-lg font-semibold text-gray-800 mt-6">Travel Logistics</h3>
+                      <p className="text-gray-600 mt-2">
+                        <strong>Transportation:</strong> {recommendation.travel_logistics.transportation}<br />
+                        <strong>Duration:</strong> {recommendation.travel_logistics.duration}
+                      </p>
+
+                      {/* Best Time to Visit */}
+                      <h3 className="text-lg font-semibold text-gray-800 mt-6">Best Time to Visit</h3>
+                      <p className="text-gray-600 mt-2">
+                        <strong>Season:</strong> {recommendation.best_time_to_visit.season}<br />
+                        <strong>Months:</strong> {recommendation.best_time_to_visit.months}
+                      </p>
+                    </CardContent>
+                  </Card>
                 ))}
-              </ul>
-
-              {/* Estimated Costs */}
-              <h3 className="text-lg font-semibold text-gray-800 mt-6">Estimated Costs</h3>
-              <p className="text-gray-600 mt-2">
-                <strong>Flights:</strong> ₹{dest.estimated_costs.flights}<br />
-                <strong>Accommodation:</strong> ₹{dest.estimated_costs.accommodation}<br />
-                <strong>Daily Expenses:</strong> ₹{dest.estimated_costs.daily_expenses}<br />
-                <strong>Total:</strong> ₹{dest.estimated_costs.total_cost} {dest.estimated_costs.currency}
-              </p>
-
-              {/* Accommodation Options */}
-              <h3 className="text-lg font-semibold text-gray-800 mt-6">Accommodation Options</h3>
-              {dest.accommodation.map((acc, accIdx) => (
-                <div key={accIdx} className="mt-4">
-                  <h4 className="text-md font-semibold text-teal-600">{acc.type}</h4>
-                  <p className="text-gray-600 mt-2">Price Range: {acc.price_range}</p>
-                  <ul className="list-disc list-inside text-gray-600 mt-2">
-                    {acc.suggested_options.map((option, optIdx) => (
-                      <li key={optIdx}>{option}</li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </section>
-  </div>
-)}
+              </div>
+            </section>
+          </div>
+        )}
       </div>
     </main>
   );
 }
+
