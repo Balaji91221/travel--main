@@ -48,7 +48,7 @@ export default function Planning() {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("https://5dfd-34-133-131-54.ngrok-free.app/recommend_travel", {
+      const response = await fetch("https://ml-9sr3.onrender.com/recommend_travel", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
