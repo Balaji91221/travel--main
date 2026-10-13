@@ -1,49 +1,78 @@
-# ExploreEase - Your Gateway to Discover India
+# ExploreEase
 
-ExploreEase is a travel planning app designed to help you discover the magic of India with personalized itineraries, flexible planning, and AI-powered recommendations. Whether you're looking to explore hidden gems or visit iconic landmarks, ExploreEase has you covered!
+**Explore Indian destinations and request a trip recommendation from one simple form.**
 
+ExploreEase is a Next.js travel-planning frontend with destination cards, a budget and preference form, recommendation results, and signup/OTP screens. It connects to separately hosted recommendation and authentication services.
 
-## Demo 👍
-## API  
-## Features
+[Get started](#get-started) · [Example](#example) · [Architecture](#architecture)
 
-- **Personalized Itineraries**: Tailored travel plans based on your preferences and budget.
-- **Hidden Gems**: Explore off-the-beaten-path destinations across India.
-- **Flexible Planning**: Easily adjust your plans as you go, with real-time updates.
-- **AI-Powered Recommendations**: Get smart suggestions for attractions, hotels, and restaurants.
+## Why this project
 
-## Tech Stack
+Choosing a destination involves several constraints at once: starting location, group size, budget, and travel preferences. ExploreEase brings those inputs together and presents the returned destination, costs, accommodation, and travel logistics in a readable layout.
 
-- **Next.js**: A React framework for server-side rendering and static site generation.
-- **Tailwind CSS**: A utility-first CSS framework for building custom designs quickly.
-- **Lucide Icons**: For a wide range of scalable, vector-based icons.
-- **Video.js**: For embedding videos in the hero section.
+## What is implemented
 
-## Pages
+- Home page featuring Indian destinations and reusable cards.
+- `/planning` form for budget, starting location, group size, and preference.
+- Recommendation display with highlights, estimated costs, accommodation, transport, and suggested visiting periods.
+- Loading and error handling around the recommendation request.
+- Signup and OTP verification requests, plus about and contact pages.
 
-- **Home Page (`/`)**: Features a hero section with a background video, popular destinations, and a CTA to start planning your trip.
-- **Planning Page (`/planning`)**: Users can start planning their trip with tailored recommendations and flexible planning options.
+## Get started
 
-## Custom Components
+Download and extract the repository. With Node.js and npm installed, run from the root:
 
-- **Button**: A reusable button component used throughout the app.
-- **Card**: A reusable card component used to display features, destinations, and testimonials.
+```bash
+npm install
+npm run dev
+```
 
-## Deployment
+Open `http://localhost:3000`.
 
-This project can be easily deployed to platforms like Vercel or Netlify:
+```bash
+npm run build
+npm start
+```
 
-- [Deploy on Vercel](https://vercel.com/)
-- [Deploy on Netlify](https://www.netlify.com/)
+## Service connections
 
-### 1. Push the code to a GitHub repository (if not already done).
-### 2. Link the repository to Vercel or Netlify.
-### 3. Follow the steps provided by the platform to deploy your application.
+Review the configured service URLs in [app/planning/page.tsx](app/planning/page.tsx) and [app/signin/page.tsx](app/signin/page.tsx). Backend implementations are not included in this repository.
 
-## Contributing
+| Workflow | Request |
+| --- | --- |
+| Recommendation | `POST /recommend_travel` on the recommendation service |
+| Signup | `POST /api/auth/signup` on the authentication service |
+| OTP verification | `POST /api/auth/verify-otp` on the authentication service |
 
-We welcome contributions! If you’d like to contribute to ExploreEase, please fork the repository and submit a pull request with your changes.
+The recommendation request includes `budget`, `starting_location`, `group_size`, and `preference_type`. The frontend expects a `recommendation` string containing JSON and parses it into the displayed result.
 
-## License
+## Example
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Open `/planning`, enter a starting city, set a budget, choose group size and preference, then submit. A compatible reachable service must return the expected response before result cards appear. The app does not include hotel reservations or payment processing.
+
+## Architecture
+
+```mermaid
+flowchart LR
+  Pages[Next.js pages] --> Form[Trip form]
+  Form --> API[External recommendation service]
+  API --> Parser[Recommendation JSON parsing]
+  Parser --> Results[Destination and cost cards]
+  Pages --> Auth[External signup and OTP service]
+```
+
+## Source guide
+
+| Path | Purpose |
+| --- | --- |
+| [app/page.tsx](app/page.tsx) | Home page and destination cards |
+| [app/planning/page.tsx](app/planning/page.tsx) | Form, API request, and result rendering |
+| [app/signin/page.tsx](app/signin/page.tsx) | Signup and OTP flow |
+| [components](components) | Header, footer, and shared UI |
+| [next.config.mjs](next.config.mjs) | Next.js configuration |
+
+## Development notes
+
+The frontend uses Next.js, React, TypeScript, Tailwind CSS, and Lucide icons. Video is rendered through an HTML video element. Verify the service contract when changing the recommendation UI; the hard-coded external URLs are not an availability guarantee. The login flow includes unfinished code, so treat authentication as an integration prototype.
+
+Contributions can focus on clearer errors, response validation, responsive layouts, and connecting the unfinished flows. The earlier README referred to an MIT license, but no license file is present in the current repository.
